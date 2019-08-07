@@ -1,0 +1,13 @@
+[package]
+name = "xenevtchn"
+version = "0.1.0"
+authors = ["Mathieu Tarral <mathieu.tarral@protonmail.com>"]
+edition = "2018"
+repository = "https://github.com/Wenzel/xenevtchn"
+readme = "README.md"
+keywords = ["xen"]
+description = "Rust bindings for Xen event channel API"
+license = "GPL-3.0-only"
+
+[dependencies]
+xenevtchn-sys = { git = "https://github.com/Wenzel/xenevtchn-sys" }
