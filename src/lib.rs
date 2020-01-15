@@ -30,10 +30,14 @@ impl XenEventChannel {
             bind_port,
         })
     }
+}
 
-    pub fn close(&mut self) {
+impl Drop for XenEventChannel {
+    fn drop(&mut self) {
         unsafe {
             xenevtchn_sys::xenevtchn_unbind(self.handle, self.bind_port as u32);
+        };
+        unsafe {
             xenevtchn_sys::xenevtchn_close(self.handle);
         };
     }
