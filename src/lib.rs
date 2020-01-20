@@ -2,6 +2,7 @@ use std::ptr::null_mut;
 use std::os::raw::c_int;
 use std::io::Error;
 
+#[derive(Debug)]
 pub struct XenEventChannel {
     handle: *mut xenevtchn_sys::xenevtchn_handle,
     fd: c_int,
