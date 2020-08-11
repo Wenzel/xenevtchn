@@ -3,7 +3,7 @@ name: Build
 on: [push, pull_request]
 
 jobs:
-  xenctrl:
+  xenevtchn:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +23,7 @@ jobs:
       - name: Annotate commit with clippy warnings
         uses: actions-rs/clippy-check@v1
         with:
-          name: clippy xen
+          name: clippy
           token: ${{ secrets.GITHUB_TOKEN }}
           args: -- -D warnings
 
