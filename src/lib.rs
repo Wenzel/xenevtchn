@@ -4,6 +4,7 @@ use libxenevtchn::LibXenEvtchn;
 use log::debug;
 use std::convert::TryInto;
 use std::io::Error;
+use std::mem;
 use std::os::raw::c_int;
 use std::ptr::null_mut;
 use xenevtchn_sys::{evtchn_port_t, xenevtchn_handle, xenevtchn_port_or_error_t};
@@ -15,29 +16,42 @@ pub struct XenEventChannel {
     libxenevtchn: LibXenEvtchn,
 }
 
+pub trait EventChannelSetup: std::fmt::Debug {
+    fn init(&mut self, domid: u32, evtchn_port: u32) -> Result<(), Error>;
+    fn xenevtchn_pending(&self) -> Result<xenevtchn_port_or_error_t, Error>;
+    fn xenevtchn_fd(&self) -> Result<i32, Error>;
+    fn xenevtchn_unmask(&self, port: evtchn_port_t) -> Result<(), Error>;
+    fn xenevtchn_notify(&self) -> Result<(), Error>;
+}
+
+pub fn create_xen_event_channel() -> XenEventChannel {
+    XenEventChannel::new()
+}
+
 impl XenEventChannel {
-    pub fn new(domid: u32, evtchn_port: u32) -> Result<Self, Error> {
-        let handle = unsafe { xenevtchn_sys::xenevtchn_open(null_mut(), 0) };
-        if handle == null_mut() {
+    fn new() -> XenEventChannel {
+        unsafe { mem::MaybeUninit::<XenEventChannel>::zeroed().assume_init() }
+    }
+}
+
+impl EventChannelSetup for XenEventChannel {
+    fn init(&mut self, domid: u32, evtchn_port: u32) -> Result<(), Error> {
+        self.handle = unsafe { xenevtchn_sys::xenevtchn_open(null_mut(), 0) };
+        if self.handle.is_null() {
             return Err(Error::last_os_error());
         }
-        let bind_port =
-            unsafe { xenevtchn_sys::xenevtchn_bind_interdomain(handle, domid, evtchn_port) };
-        debug!("bind_port = {x}", x = bind_port);
-        if bind_port < 0 {
+        self.bind_port =
+            unsafe { xenevtchn_sys::xenevtchn_bind_interdomain(self.handle, domid, evtchn_port) };
+        debug!("bind_port = {x}", x = self.bind_port);
+        if self.bind_port < 0 {
             return Err(Error::last_os_error());
         }
 
-        let libxenevtchn = unsafe { LibXenEvtchn::new() };
-
-        Ok(XenEventChannel {
-            handle,
-            bind_port,
-            libxenevtchn,
-        })
+        self.libxenevtchn = unsafe { LibXenEvtchn::new() };
+        Ok(())
     }
 
-    pub fn xenevtchn_pending(&self) -> Result<xenevtchn_port_or_error_t, Error> {
+    fn xenevtchn_pending(&self) -> Result<xenevtchn_port_or_error_t, Error> {
         let port = (self.libxenevtchn.xenevtchn_pending)(self.handle);
         if port < 0 {
             return Err(Error::last_os_error());
@@ -45,11 +59,11 @@ impl XenEventChannel {
         Ok(port)
     }
 
-    pub fn xenevtchn_fd(&self) -> Result<i32, Error> {
+    fn xenevtchn_fd(&self) -> Result<i32, Error> {
         Ok((self.libxenevtchn.xenevtchn_fd)(self.handle))
     }
 
-    pub fn xenevtchn_unmask(&self, port: evtchn_port_t) -> Result<(), Error> {
+    fn xenevtchn_unmask(&self, port: evtchn_port_t) -> Result<(), Error> {
         let res = (self.libxenevtchn.xenevtchn_unmask)(self.handle, port);
         if res < 0 {
             return Err(Error::last_os_error());
@@ -57,7 +71,7 @@ impl XenEventChannel {
         Ok(())
     }
 
-    pub fn xenevtchn_notify(&self) -> Result<(), Error> {
+    fn xenevtchn_notify(&self) -> Result<(), Error> {
         let res =
             (self.libxenevtchn.xenevtchn_notify)(self.handle, self.bind_port.try_into().unwrap());
         if res < 0 {
