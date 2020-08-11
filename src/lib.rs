@@ -1,6 +1,6 @@
-use std::ptr::null_mut;
-use std::os::raw::c_int;
 use std::io::Error;
+use std::os::raw::c_int;
+use std::ptr::null_mut;
 
 #[derive(Debug)]
 pub struct XenEventChannel {
@@ -10,20 +10,18 @@ pub struct XenEventChannel {
 }
 
 impl XenEventChannel {
+    pub fn new(domid: u32, evtchn_port: u32) -> Result<Self, Error> {
+        let handle = unsafe { xenevtchn_sys::xenevtchn_open(null_mut(), 0) };
+        if handle.is_null() {
+            return Err(Error::last_os_error());
+        }
 
-    pub fn new(domid: u32, evtchn_port: u32) -> Result<Self,Error> {
-        let handle = unsafe {
-            xenevtchn_sys::xenevtchn_open(null_mut(), 0)
-        };
-        if handle == null_mut() { return Err(Error::last_os_error()); }
-
-        let fd = unsafe {
-            xenevtchn_sys::xenevtchn_fd(handle)
-        };
-        let bind_port = unsafe {
-            xenevtchn_sys::xenevtchn_bind_interdomain(handle, domid, evtchn_port)
-        };
-        if bind_port < 0 { return Err(Error::last_os_error()); }
+        let fd = unsafe { xenevtchn_sys::xenevtchn_fd(handle) };
+        let bind_port =
+            unsafe { xenevtchn_sys::xenevtchn_bind_interdomain(handle, domid, evtchn_port) };
+        if bind_port < 0 {
+            return Err(Error::last_os_error());
+        }
 
         Ok(XenEventChannel {
             handle,
