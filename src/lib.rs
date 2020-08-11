@@ -12,7 +12,7 @@ pub struct XenEventChannel {
 impl XenEventChannel {
     pub fn new(domid: u32, evtchn_port: u32) -> Result<Self, Error> {
         let handle = unsafe { xenevtchn_sys::xenevtchn_open(null_mut(), 0) };
-        if handle == null_mut() {
+        if handle.is_null() {
             return Err(Error::last_os_error());
         }
 
