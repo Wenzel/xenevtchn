@@ -22,8 +22,9 @@ impl XenEventChannel {
         if handle.is_null() {
             return Err(Error::last_os_error());
         }
+        debug!("binding interdomain on remote port {}", evtchn_port);
         let bind_port = (libxenevtchn.xenevtchn_bind_interdomain)(handle, domid, evtchn_port);
-        debug!("bind_port = {x}", x = bind_port);
+        debug!("local port = {}", bind_port);
         if bind_port < 0 {
             return Err(Error::last_os_error());
         }
@@ -52,6 +53,7 @@ impl XenEventChannel {
     }
 
     pub fn xenevtchn_unmask(&self, port: evtchn_port_t) -> Result<(), Error> {
+        debug!("unmasking local port {}", port);
         let res = (self.libxenevtchn.xenevtchn_unmask)(self.handle, port);
         if res < 0 {
             return Err(Error::last_os_error());
@@ -60,6 +62,7 @@ impl XenEventChannel {
     }
 
     pub fn xenevtchn_notify(&self) -> Result<(), Error> {
+        debug!("notifying local port {}", self.bind_port);
         let res =
             (self.libxenevtchn.xenevtchn_notify)(self.handle, self.bind_port.try_into().unwrap());
         if res < 0 {
@@ -71,7 +74,9 @@ impl XenEventChannel {
 
 impl Drop for XenEventChannel {
     fn drop(&mut self) {
+        debug!("unbinding local port {}", self.bind_port);
         (self.libxenevtchn.xenevtchn_unbind)(self.handle, self.bind_port as u32);
+        debug!("closing");
         (self.libxenevtchn.xenevtchn_close)(self.handle);
     }
 }
