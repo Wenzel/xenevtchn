@@ -30,6 +30,9 @@ type FnXenevtchnBindInterdomain = fn(
     remote_port: evtchn_port_t,
 ) -> xenevtchn_port_or_error_t;
 
+// xenevtchn_unbind
+type FnXenevtchnUnbind = fn(xce: *mut xenevtchn_handle, port: evtchn_port_t) -> c_int;
+
 #[derive(Debug)]
 pub struct LibXenEvtchn {
     lib: Library,
@@ -39,6 +42,7 @@ pub struct LibXenEvtchn {
     pub xenevtchn_fd: RawSymbol<FnXenevtchnFd>,
     pub xenevtchn_open: RawSymbol<FnXenevtchnOpen>,
     pub xenevtchn_bind_interdomain: RawSymbol<FnXenevtchnBindInterdomain>,
+    pub xenevtchn_unbind: RawSymbol<FnXenevtchnUnbind>,
 }
 
 impl LibXenEvtchn {
@@ -68,6 +72,10 @@ impl LibXenEvtchn {
             lib.get(b"xenevtchn_bind_interdomain\0").unwrap();
         let xenevtchn_bind_interdomain = xenevtchn_bind_interdomain_sym.into_raw();
 
+        let xenevtchn_unbind_sym: Symbol<FnXenevtchnUnbind> =
+            lib.get(b"xenevtchn_unbind\0").unwrap();
+        let xenevtchn_unbind = xenevtchn_unbind_sym.into_raw();
+
         LibXenEvtchn {
             lib,
             xenevtchn_pending,
@@ -76,6 +84,7 @@ impl LibXenEvtchn {
             xenevtchn_fd,
             xenevtchn_open,
             xenevtchn_bind_interdomain,
+            xenevtchn_unbind,
         }
     }
 }
