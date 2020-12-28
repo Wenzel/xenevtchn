@@ -36,6 +36,14 @@ impl XenEventChannel {
         })
     }
 
+    pub fn xenevtchn_close(&self) -> Result<(), Error> {
+        let res = (self.libxenevtchn.xenevtchn_close)(self.handle);
+        if res < 0 {
+            return Err(Error::last_os_error());
+        }
+        Ok(())
+    }
+
     pub fn xenevtchn_pending(&self) -> Result<xenevtchn_port_or_error_t, Error> {
         let port = (self.libxenevtchn.xenevtchn_pending)(self.handle);
         if port < 0 {
@@ -70,13 +78,21 @@ impl XenEventChannel {
         }
         Ok(())
     }
+
+    pub fn xenevtchn_unbind(&self) -> Result<(), Error> {
+        debug!("unbinding local port {}", self.bind_port);
+        let res = (self.libxenevtchn.xenevtchn_unbind)(self.handle, self.bind_port as u32);
+        if res < 0 {
+            return Err(Error::last_os_error());
+        }
+        Ok(())
+    }
 }
 
 impl Drop for XenEventChannel {
     fn drop(&mut self) {
-        debug!("unbinding local port {}", self.bind_port);
-        (self.libxenevtchn.xenevtchn_unbind)(self.handle, self.bind_port as u32);
-        debug!("closing");
-        (self.libxenevtchn.xenevtchn_close)(self.handle);
+        self.xenevtchn_unbind()
+            .expect("Failed to unbind local port");
+        self.xenevtchn_close().expect("Failed to close xenevtchn");
     }
 }
