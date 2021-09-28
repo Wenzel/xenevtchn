@@ -10,6 +10,6 @@ description = "Rust bindings for Xen event channel API"
 license = "GPL-3.0-only"
 
 [dependencies]
-libloading = "0.6.1"
+libloading = "0.7.0"
 log = "0.4.8"
 xenevtchn-sys = "0.1.2"
