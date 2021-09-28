@@ -5,7 +5,7 @@ use xenevtchn_sys::{
     evtchn_port_t, xenevtchn_handle, xenevtchn_port_or_error_t, xentoollog_logger,
 };
 
-const LIBXENEVTCHN_BASENAME: &str = "xenevtchn.so";
+const LIBXENEVTCHN_BASENAME: &str = "xenevtchn";
 
 //xenevtchn_pending
 type FnXenevtchnPending = fn(xce: *mut xenevtchn_handle) -> xenevtchn_port_or_error_t;
