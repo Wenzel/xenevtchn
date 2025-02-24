@@ -10,12 +10,12 @@ description = "Rust bindings for Xen event channel API"
 license = "GPL-3.0-only"
 
 [dependencies]
-libloading = "0.7.0"
-log = "0.4.8"
-xenevtchn-sys = "0.1.2"
+libloading = "0.8.6"
+log = "0.4.26"
+xenevtchn-sys = "0.2.0"
 
 [package.metadata.release]
 # releases are managed by cargo release, but publication is done on the CI
 # this metadata prevents a misuse when --skip-publish flag is missing from cargo
 # release command line
-disable-publish = true
+publish = false

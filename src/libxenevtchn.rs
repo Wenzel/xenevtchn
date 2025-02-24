@@ -38,6 +38,7 @@ type FnXenevtchnUnbind = fn(xce: *mut xenevtchn_handle, port: evtchn_port_t) -> 
 
 #[derive(Debug)]
 pub struct LibXenEvtchn {
+    #[allow(dead_code)]
     lib: Library,
     pub xenevtchn_pending: RawSymbol<FnXenevtchnPending>,
     pub xenevtchn_unmask: RawSymbol<FnXenevtchnUnmask>,
